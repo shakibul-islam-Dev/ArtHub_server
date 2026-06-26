@@ -9,7 +9,7 @@ const userRouter = require("./src/routes/user_route");
 const commentRouter = require("./src/routes/comment_route");
 const subscription_route = require("./src/routes/subscription_route");
 const checkoutRouter = require("./src/routes/checkoutRoutes");
-
+const salesRoutes = require("./src/routes/sales_route");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -28,6 +28,7 @@ app.use("/api/arthub/user", userRouter);
 app.use("/api/arthub/comment", commentRouter);
 app.use("/api/arthub/subscriptions", subscription_route);
 app.use("/api/arthub", checkoutRouter); // Checkout routes
+app.use("/api/arthub", salesRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server is running!");
