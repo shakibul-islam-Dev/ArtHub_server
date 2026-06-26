@@ -27,13 +27,11 @@ class ArtworkController {
       return res.status(200).json(artworks);
     } catch (error) {
       console.error("GET artwork Error:", error);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 
@@ -67,13 +65,11 @@ class ArtworkController {
       return res.status(200).json(artwork);
     } catch (error) {
       console.error("GET Single Artwork Error:", error);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 
@@ -94,31 +90,25 @@ class ArtworkController {
 
       // অথরাইজেশন চেক
       if (!user && !artist_id) {
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Unauthorized access! No artist information found.",
-          });
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized access! No artist information found.",
+        });
       }
 
       if (user && user.role !== "artist") {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: "Forbidden access! Only artists can post artwork.",
-          });
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden access! Only artists can post artwork.",
+        });
       }
 
       // ফিল্ড ভ্যালিডেশন
       if (!title || !description || !price || !category || !image_url) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Please provide all the required fields",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Please provide all the required fields",
+        });
       }
 
       // আর্টিস্ট আইডি ফিল্টার
@@ -154,13 +144,11 @@ class ArtworkController {
       return res.status(201).json(newArtwork);
     } catch (error) {
       console.error("POST Artwork Error:", error);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 
@@ -187,30 +175,24 @@ class ArtworkController {
       } = req.body;
 
       if (!user && !artist_id) {
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Unauthorized access! No artist information found.",
-          });
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized access! No artist information found.",
+        });
       }
 
       if (user && user.role !== "artist") {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message: "Forbidden access! Only artists can post artwork.",
-          });
+        return res.status(403).json({
+          success: false,
+          message: "Forbidden access! Only artists can post artwork.",
+        });
       }
 
       if (!title || !description || !price || !category || !image_url) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Please provide all the required fields",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Please provide all the required fields",
+        });
       }
 
       const artworkCollection = await getCollection("artwork");
@@ -271,13 +253,11 @@ class ArtworkController {
       return res.status(200).json(updatedArtwork);
     } catch (error) {
       console.error("PUT Artwork Error:", error);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 
@@ -293,31 +273,34 @@ class ArtworkController {
       const cleanId = id.trim();
       const artworkCollection = await getCollection("artwork");
 
+      // কুয়েরি তৈরি
       const query = { $or: [{ _id: cleanId }] };
       if (ObjectId.isValid(cleanId)) {
         query.$or.push({ _id: new ObjectId(cleanId) });
       }
 
-      const result = await artworkCollection.findOneAndDelete(query);
-      const deletedArtwork = result.value !== undefined ? result.value : result;
+      // সঠিক ডিলিট মেথড (নেটিভ ড্রাইভারের জন্য)
+      const result = await artworkCollection.deleteOne(query);
 
-      if (!deletedArtwork) {
+      // result.deletedCount চেক করা সবচেয়ে নিরাপদ পদ্ধতি
+      if (result.deletedCount === 0) {
         return res
           .status(404)
           .json({ success: false, message: "Artwork not found" });
       }
 
-      // ডিলিট হওয়া অবজেক্টটি সরাসরি রিটার্ন করা হলো
-      return res.status(200).json(deletedArtwork);
+      // সাকসেস রেসপন্স
+      return res.status(200).json({
+        success: true,
+        message: "Artwork deleted successfully",
+      });
     } catch (error) {
       console.error("DELETE Artwork Error:", error);
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   }
 }

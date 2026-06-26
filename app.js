@@ -1,11 +1,11 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-// const cookieParser = require("cookie-parser");
-const { connectDB } = require("./src/config/database"); // 🎯 আমাদের তৈরি করা র-মঙ্গোডিবি ড্রাইভার ফাইলটি ইম্পোর্ট করো
+const { connectDB } = require("./src/config/database");
 
 const artworkRouter = require("./src/routes/artwork_route");
 const userRouter = require("./src/routes/user_route");
+const commentRouter = require("./src/routes/comment_route"); // 🎯 ১. কমেন্ট রাউটারটি ইম্পোর্ট করুন
 
 dotenv.config();
 
@@ -20,18 +20,17 @@ app.use(
     credentials: true,
   }),
 );
-// app.use(cookieParser());
 
 // ======================== API Routes ========================
 app.use("/api/arthub/artwork", artworkRouter);
 app.use("/api/arthub/user", userRouter);
+app.use("/api/arthub/comment", commentRouter); // 🎯 ২. কমেন্ট এন্ডপয়েন্টটি সেট করুন
 
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
 
 // ======================== Native MongoDB Connection ========================
-// 🎯 মঙ্গুসের পরিবর্তে র-মঙ্গোডিবি ড্রাইভার দিয়ে কানেক্ট করে সার্ভার স্টার্ট করা হচ্ছে
 connectDB()
   .then(() => {
     app.listen(port, () => {

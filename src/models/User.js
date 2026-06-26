@@ -1,9 +1,4 @@
-// এই ফাইলে কোনো মঙ্গুসের প্রয়োজন নেই, এটি সম্পূর্ণ পিওর জাভাস্ক্রিপ্ট ক্লাস
 class User {
-  /**
-   * ডাটাবেজে ইউজার ইনসার্ট বা আপডেট করার আগে ডেটা ফরম্যাট ও ডিফল্ট ভ্যালু সেট করার জন্য
-   * @param {Object} data - ফ্রন্টএন্ড বা রিকোয়েস্ট বডি থেকে আসা ডেটা
-   */
   static format(data) {
     if (!data._id)
       throw new Error("User ID (_id) is required for Better Auth matching.");

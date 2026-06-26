@@ -1,29 +1,38 @@
-import mongoose from "mongoose";
+class Comment {
+  static format(data) {
+    if (!data.artworkId) {
+      throw new Error(
+        "Artwork ID (artworkId) is required for Comment matching.",
+      );
+    }
+    if (!data.userId) {
+      throw new Error("User ID (userId) is required for Comment matching.");
+    }
+    if (!data.comment || String(data.comment).trim() === "") {
+      throw new Error("Comment text is required.");
+    }
 
-const commentSchema = new mongoose.Schema(
-  {
-    artworkId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Artwork",
-      required: true,
-    },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    comment: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
+    // Mongoose schema-r moto trim, dynamic ID handling ebong automatic timestamps handle kora holo
+    return {
+      artworkId:
+        typeof data.artworkId === "object"
+          ? data.artworkId
+          : String(data.artworkId).trim(),
+      userId:
+        typeof data.userId === "object"
+          ? data.userId
+          : String(data.userId).trim(),
+      comment: String(data.comment).trim(),
+      createdAt: data.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+  }
 
-const Comment =
-  mongoose.models.Comment || mongoose.model("Comment", commentSchema);
+  // Jodi kono development validation bypass ba customized extra logic dorkar hoy
+  static isValidComment(text) {
+    // Basic text length validation bypass test
+    return text && text.trim().length > 0;
+  }
+}
 
-export default Comment;
+module.exports = Comment;

@@ -25,13 +25,11 @@ class UserController {
       // 🎯 সরাসরি অবজেক্ট রিটার্ন (পোস্টম্যানে { _id: "...", name: "..." } এভাবে আসবে)
       return res.status(200).json(user);
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 
@@ -55,13 +53,11 @@ class UserController {
         data: users,
       });
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 
@@ -93,13 +89,11 @@ class UserController {
       // 🎯 সরাসরি অবজেক্ট রিটার্ন
       return res.status(200).json(user);
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 
@@ -108,12 +102,10 @@ class UserController {
     try {
       const user = req.body;
       if (!user._id || !user.name || !user.email) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "_id, name, and email are required",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "_id, name, and email are required",
+        });
       }
 
       const userCollection = await getCollection("user");
@@ -136,13 +128,11 @@ class UserController {
       // 🎯 তৈরি হওয়া নতুন ইউজার অবজেক্ট সরাসরি রিটার্ন
       return res.status(201).json(newUser);
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 
@@ -210,13 +200,11 @@ class UserController {
       // 🎯 আপডেটেড আপ টু ডেট পিওর অবজেক্ট রিটার্ন
       return res.status(200).json(updatedUser);
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 
@@ -256,13 +244,11 @@ class UserController {
       // 🎯 ডিলিট হওয়া অবজেক্টটি সরাসরি রিটার্ন করে দেওয়া হলো
       return res.status(200).json(deletedUser);
     } catch (error) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Server error",
-          error: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
     }
   };
 }

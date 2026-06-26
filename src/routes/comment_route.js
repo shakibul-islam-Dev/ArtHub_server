@@ -1,14 +1,14 @@
 const express = require("express");
 const commentRouter = express.Router();
-const Comment = require("../models/comment"); // 👈 আপনার Mongoose Model
+const commentController = require("../controllers/commentController");
 
 // ======================== GET ALL COMMENTS ========================
 commentRouter.get("/", async (req, res) => {
   try {
-    const comments = await Comment.find();
+    const comments = await commentController.getAll();
     res.status(200).json(comments);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -16,28 +16,24 @@ commentRouter.get("/", async (req, res) => {
 commentRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const comment = await Comment.findById(id);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
+    const comment = await commentController.getById(id);
+
+    if (comment.message && comment.message === "Comment not found") {
+      return res.status(404).json(comment);
     }
+
     res.status(200).json(comment);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // ======================== POST NEW COMMENT ========================
 commentRouter.post("/", async (req, res) => {
   try {
-    const {
-      comment,
-      user_id,
-      artwork_id,
-      date_uploaded,
-      user, // ফ্রন্টএন্ড সেশন ডাটা
-    } = req.body;
+    const { comment, artwork_id, user } = req.body;
 
-    // ভ্যালিডেশন চেক
+    // Authentication & Authorization Validation
     if (!user) {
       return res.status(401).json({
         message: "Unauthorized access! No user information found.",
@@ -50,25 +46,24 @@ commentRouter.post("/", async (req, res) => {
       });
     }
 
-    if (!comment) {
+    if (!comment || String(comment).trim() === "") {
       return res.status(400).json({ message: "Please provide a comment" });
     }
 
-    const newComment = new Comment({
-      comment,
-      user_id: user?.id || user?._id,
-      artwork_id,
-      date_uploaded: date_uploaded || new Date(),
+    // Amader schema validation dynamic controller naming matching mapping
+    const savedComment = await commentController.create({
+      comment: comment,
+      artworkId: artwork_id,
+      userId: user?.id || user?._id,
     });
 
-    const savedComment = await newComment.save();
     res.status(201).json({
       success: true,
       message: "Comment added successfully",
       data: savedComment,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -76,7 +71,7 @@ commentRouter.post("/", async (req, res) => {
 commentRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { comment, user_id, artwork_id, date_uploaded, user } = req.body;
+    const { comment, artwork_id, user } = req.body;
 
     if (!user) {
       return res.status(401).json({
@@ -90,26 +85,22 @@ commentRouter.put("/:id", async (req, res) => {
       });
     }
 
-    if (!comment) {
+    if (!comment || String(comment).trim() === "") {
       return res.status(400).json({ message: "Please provide a comment" });
     }
 
-    // আগের ডেটা চেক করার জন্য প্রথমে খোঁজা হচ্ছে (artist_name ধরে রাখার জন্য)
-    const existingComment = await Comment.findById(id);
-    if (!existingComment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-
-    const updateData = {
-      comment,
-      user_id: user?.id || user?._id,
-      artwork_id,
-      date_uploaded: date_uploaded || existingComment.date_uploaded,
-    };
-
-    const updatedComment = await Comment.findByIdAndUpdate(id, updateData, {
-      new: true, // এর ফলে আপডেট হওয়া নতুন ডাটা রিটার্ন করবে
+    const updatedComment = await commentController.update(id, {
+      comment: comment,
+      artworkId: artwork_id,
+      userId: user?.id || user?._id,
     });
+
+    if (
+      updatedComment.message &&
+      updatedComment.message === "Comment not found"
+    ) {
+      return res.status(404).json(updatedComment);
+    }
 
     res.status(200).json({
       success: true,
@@ -117,7 +108,7 @@ commentRouter.put("/:id", async (req, res) => {
       data: updatedComment,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -125,15 +116,15 @@ commentRouter.put("/:id", async (req, res) => {
 commentRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const comment = await Comment.findByIdAndDelete(id);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
+    const result = await commentController.delete(id);
+
+    if (result.message && result.message === "Comment not found") {
+      return res.status(404).json(result);
     }
-    res
-      .status(200)
-      .json({ success: true, message: "Comment deleted successfully" });
+
+    res.status(200).json({ success: true, message: result.message });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
