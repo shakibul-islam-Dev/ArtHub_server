@@ -2,9 +2,6 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { ObjectId } = require("mongodb");
 const { getCollection } = require("../config/database");
 
-// =========================================================================
-// ১. স্ট্রাইপ ওয়ান-টাইম পেমেন্ট সেশন তৈরি (Checkout Session)
-// =========================================================================
 const createSingleArtworkCheckout = async (req, res) => {
   try {
     const {
@@ -50,11 +47,11 @@ const createSingleArtworkCheckout = async (req, res) => {
       cancel_url: `${baseUrl}/artwork/${artworkId}`,
       metadata: {
         artworkId,
-        title: title || "Untitled Art", // ফ্রন্টএন্ডের জন্য মেটাডেটা ব্যাকআপ
+        title: title || "Untitled Art",
         userId,
         userEmail,
-        buyerName: userName || "Guest User", // ক্রেতার নাম ব্যাকআপ
-        artistEmail: artistEmail || "Unknown Artist", // আর্টিস্টের ইমেইল ব্যাকআপ
+        buyerName: userName || "Guest User",
+        artistEmail: artistEmail || "Unknown Artist",
         paymentType: "single_artwork",
       },
     });
@@ -66,9 +63,6 @@ const createSingleArtworkCheckout = async (req, res) => {
   }
 };
 
-// =========================================================================
-// ২. পেমেন্ট ভেরিফাই এবং ডাটাবেজে (Native MongoDB) ট্রানজেকশন সেভ করা
-// =========================================================================
 const confirmPaymentAndSaveOrder = async (req, res) => {
   try {
     const { sessionId } = req.body;
@@ -87,7 +81,6 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
         .json({ success: false, message: "Payment not completed yet" });
     }
 
-    // মেটাডেটা থেকে সব প্রয়োজনীয় প্রোপার্টি ডিস্ট্রাকচার করা
     const { artworkId, title, userId, userEmail, buyerName, artistEmail } =
       session.metadata;
     const amount = session.amount_total / 100;
@@ -101,7 +94,6 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
       ? new ObjectId(userId)
       : userId;
 
-    // ডুপ্লিকেট চেক (যাতে রিফ্রেশ দিলে একই ট্রানজেকশন ডাবল সেভ না হয়)
     const existingTransaction = await transactionsCollection.findOne({
       artworkId: formattedArtworkId,
       userId: formattedUserId,
@@ -115,14 +107,12 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
       });
     }
 
-    // নতুন অবজেক্ট ফরম্যাট (আগের কি-গুলো অপরিবর্তিত রেখে অতিরিক্ত ফ্রন্টএন্ড ডাটা সহ)
     const newTransaction = {
       amount: amount,
       userId: formattedUserId,
       userEmail: userEmail ? userEmail.trim().toLowerCase() : null,
       artworkId: formattedArtworkId,
 
-      // ফ্রন্টএন্ড ট্রানজেকশন পেজ যে ফিল্ডগুলো ম্যাপ করছে:
       artwork_title: title || "Untitled Art",
       buyer_name: buyerName || "Guest User",
       buyer_email: userEmail ? userEmail.trim().toLowerCase() : "No Email",
@@ -134,7 +124,6 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
     const result = await transactionsCollection.insertOne(newTransaction);
     newTransaction._id = result.insertedId;
 
-    // পেমেন্ট সফল হওয়ার সাথে সাথে আর্টওয়ার্কের স্ট্যাটাস "sold" করার সেফটি কুয়েরি
     try {
       const artworkCollection = await getCollection("artwork");
       const artQuery = { $or: [{ _id: artworkId }] };
@@ -162,7 +151,7 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
 };
 
 // =========================================================================
-// ৩. নির্দিষ্ট ইউজারের ট্রানজেকশন হিস্ট্রি তুলে আনা (Aggregation Lookup)
+//(Aggregation Lookup)
 // =========================================================================
 const getUserTransactionHistory = async (req, res) => {
   try {

@@ -1,7 +1,15 @@
 const express = require("express");
 const artworkRouter = express.Router();
 const { ObjectId } = require("mongodb");
-const artworkController = require("../controllers/artworkControllers");
+const {
+  artworkController,
+  getAll,
+  getById,
+  create,
+  approveArtwork,
+  update,
+  deleteArtwork,
+} = require("../controller/artworkController");
 
 const validateObjectId = (req, res, next) => {
   const { id } = req.params;
@@ -24,20 +32,16 @@ const validateObjectId = (req, res, next) => {
   next();
 };
 
-artworkRouter.get("/", artworkController.getAll);
+artworkRouter.get("/", getAll);
 
-artworkRouter.get("/:id", validateObjectId, artworkController.getById);
+artworkRouter.get("/:id", validateObjectId, getById);
 
-artworkRouter.post("/", artworkController.create);
+artworkRouter.post("/", create);
 
-artworkRouter.patch(
-  "/:id/approve",
-  validateObjectId,
-  artworkController.approveArtwork,
-);
+artworkRouter.patch("/:id/approve", validateObjectId, approveArtwork);
 
-artworkRouter.put("/:id", validateObjectId, artworkController.update);
+artworkRouter.put("/:id", validateObjectId, update);
 
-artworkRouter.delete("/:id", validateObjectId, artworkController.delete);
+artworkRouter.delete("/:id", validateObjectId, deleteArtwork);
 
 module.exports = artworkRouter;

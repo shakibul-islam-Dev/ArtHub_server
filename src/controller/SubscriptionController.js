@@ -11,7 +11,10 @@ const subscriptionController = {
       const subscriptionCollection = await getCollection("subscriptions");
 
       await subscriptionCollection.updateOne(
-        { userEmail: formattedData.userEmail },
+        {
+          userEmail: formattedData.userEmail,
+          priceId: formattedData.priceId,
+        },
         {
           $set: {
             ...formattedData,
@@ -69,7 +72,6 @@ const subscriptionController = {
     }
   },
 
-  // ৩. সাবস্ক্রিপশন স্ট্যাটাস আপডেট করা (Update Status)
   updateSubscriptionStatus: async (req, res) => {
     try {
       const { priceId, userEmail, status } = req.body;
@@ -81,7 +83,6 @@ const subscriptionController = {
         });
       }
 
-      // ⚠️ ফিক্সড: এখানে অবশ্যই await দিতে হবে
       const subscriptionCollection = await getCollection("subscriptions");
 
       const result = await subscriptionCollection.updateOne(

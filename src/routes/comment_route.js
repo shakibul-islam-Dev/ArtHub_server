@@ -1,11 +1,17 @@
 const express = require("express");
 const commentRouter = express.Router();
-const commentController = require("../controllers/commentController");
+const {
+  getAll,
+  getById,
+  create,
+  update,
+  deleteComment,
+} = require("../controller/commentController");
 
 // ======================== GET ALL COMMENTS ========================
 commentRouter.get("/", async (req, res) => {
   try {
-    const comments = await commentController.getAll();
+    const comments = await getAll();
     res.status(200).json(comments);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -16,7 +22,7 @@ commentRouter.get("/", async (req, res) => {
 commentRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const comment = await commentController.getById(id);
+    const comment = await getById(id);
 
     if (comment.message && comment.message === "Comment not found") {
       return res.status(404).json(comment);
@@ -49,7 +55,7 @@ commentRouter.post("/", async (req, res) => {
       return res.status(400).json({ message: "Please provide a comment" });
     }
 
-    const savedComment = await commentController.create({
+    const savedComment = await create({
       comment: comment,
       artworkId: artwork_id,
       userId: user?.id || user?._id,
@@ -87,7 +93,7 @@ commentRouter.put("/:id", async (req, res) => {
       return res.status(400).json({ message: "Please provide a comment" });
     }
 
-    const updatedComment = await commentController.update(id, {
+    const updatedComment = await update(id, {
       comment: comment,
       artworkId: artwork_id,
       userId: user?.id || user?._id,

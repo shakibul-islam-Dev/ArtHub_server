@@ -1,5 +1,5 @@
 const Transaction = require("../models/Transaction");
-const { getCollection } = require("../config/database"); // আপনার ডাটাবেজ ফাইলের সঠিক পাথ দিন
+const { getCollection } = require("../config/database");
 
 const createTransaction = async (req, res) => {
   try {
@@ -26,7 +26,6 @@ const createTransaction = async (req, res) => {
 
 const getAllTransactions = async (req, res) => {
   try {
-    // সরাসরি কালেকশন ইনস্ট্যান্স নেওয়া হচ্ছে
     const transactionsCollection = await getCollection("transactions");
     const transactions = await transactionsCollection
       .find({})

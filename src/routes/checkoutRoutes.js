@@ -4,7 +4,7 @@ const {
   createSingleArtworkCheckout,
   confirmPaymentAndSaveOrder,
   getUserTransactionHistory,
-} = require("../controllers/checkoutController");
+} = require("../controller/checkoutController");
 
 router.post("/checkout/single-artwork", createSingleArtworkCheckout);
 
