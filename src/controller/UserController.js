@@ -247,7 +247,7 @@ const deleteUser = async (req, res) => {
     });
   }
 };
-
+//Only for testing
 module.exports = {
   getCurrentUserByRole,
   getAll,
