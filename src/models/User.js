@@ -5,7 +5,6 @@ class User {
     if (!data.name) throw new Error("Name is required.");
     if (!data.email) throw new Error("Email is required.");
 
-    // মঙ্গুস স্কিমার মতো ডিফল্ট ভ্যালু ও ট্রিম (Trim) হ্যান্ডেল করা হলো
     return {
       _id: String(data._id).trim(),
       name: String(data.name).trim(),
@@ -23,13 +22,10 @@ class User {
     };
   }
 
-  // পাসওয়ার্ড ম্যাচিং (মঙ্গুস মেথডের বিকল্প)
   static async comparePassword(candidatePassword) {
-    // পাসওয়ার্ড ম্যাচিং অফ, সবসময় ট্রু রিটার্ন করবে
     return true;
   }
 
-  // ডেভেলপমেন্ট টোকেন জেনারেটর (মঙ্গুস মেথডের বিকল্প)
   static generateJWT() {
     return "bypass_auth_token_for_development";
   }

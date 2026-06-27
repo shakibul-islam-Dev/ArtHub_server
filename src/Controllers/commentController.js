@@ -1,10 +1,9 @@
 const { ObjectId } = require("mongodb");
 const Comment = require("../models/Comment");
-const { getCollection } = require("../config/database"); // 🎯 আপনার তৈরি করা ফাংশনটি ইম্পোর্ট করা হলো
+const { getCollection } = require("../config/database");
 
 class CommentController {
   async getAll() {
-    // getCollection async হওয়ায় অবশই await দিতে হবে
     const collection = await getCollection("comments");
     const comments = await collection.find({}).toArray();
     return comments;
@@ -25,7 +24,6 @@ class CommentController {
   async create(commentData) {
     const collection = await getCollection("comments");
 
-    // Model validation running
     const formattedComment = Comment.format(commentData);
 
     const result = await collection.insertOne(formattedComment);
@@ -64,10 +62,9 @@ class CommentController {
     const result = await collection.findOneAndUpdate(
       query,
       { $set: updateData },
-      { returnDocument: "after" }, // MongoDB Native Driver-এ নতুন ডেটা রিটার্ন করার নিয়ম
+      { returnDocument: "after" },
     );
 
-    // MongoDB native driver e আপডেট করা অবজেক্টটি সরাসরি result-এর ভেতর থাকে
     return result;
   }
 

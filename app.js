@@ -1,4 +1,4 @@
-require("dotenv").config(); // এটি সবার উপরে থাকতে হবে
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./src/config/database");
@@ -10,6 +10,7 @@ const commentRouter = require("./src/routes/comment_route");
 const subscription_route = require("./src/routes/subscription_route");
 const checkoutRouter = require("./src/routes/checkoutRoutes");
 const salesRoutes = require("./src/routes/sales_route");
+const transctionsRoute = require("./src/routes/transctions_route");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -27,8 +28,9 @@ app.use("/api/arthub/artwork", artworkRouter);
 app.use("/api/arthub/user", userRouter);
 app.use("/api/arthub/comment", commentRouter);
 app.use("/api/arthub/subscriptions", subscription_route);
-app.use("/api/arthub", checkoutRouter); // Checkout routes
+app.use("/api/arthub", checkoutRouter);
 app.use("/api/arthub", salesRoutes);
+app.use("/api/arthub/transactions", transctionsRoute);
 
 app.get("/", (req, res) => {
   res.send("Server is running!");
@@ -38,9 +40,9 @@ app.get("/", (req, res) => {
 connectDB()
   .then(() => {
     app.listen(port, () => {
-      console.log(`🚀 Server is perfectly running on port ${port}`);
+      console.log(` Server is perfectly running on port ${port}`);
     });
   })
   .catch((err) => {
-    console.error("❌ Critical: Could not start server due to DB error!", err);
+    console.error(" Critical: Could not start server due to DB error!", err);
   });

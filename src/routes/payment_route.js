@@ -29,15 +29,8 @@ paymentRouter.get("/:id", async (req, res) => {
 // ======================== POST NEW PAYMENT ========================
 paymentRouter.post("/", async (req, res) => {
   try {
-    const {
-      amount,
-      user_id,
-      artwork_id,
-      date_uploaded,
-      user, // ফ্রন্টএন্ড সেশন ডাটা
-    } = req.body;
+    const { amount, user_id, artwork_id, date_uploaded, user } = req.body;
 
-    // ভ্যালিডেশন চেক
     if (!user) {
       return res.status(401).json({
         message: "Unauthorized access! No user information found.",
@@ -94,7 +87,6 @@ paymentRouter.put("/:id", async (req, res) => {
       return res.status(400).json({ message: "Please provide an amount" });
     }
 
-    // আগের ডেটা চেক করার জন্য প্রথমে খোঁজা হচ্ছে (artist_name ধরে রাখার জন্য)
     const existingPayment = await Payment.findById(id);
     if (!existingPayment) {
       return res.status(404).json({ message: "Payment not found" });
@@ -108,7 +100,7 @@ paymentRouter.put("/:id", async (req, res) => {
     };
 
     const updatedPayment = await Payment.findByIdAndUpdate(id, updateData, {
-      new: true, // এর ফলে আপডেট হওয়া নতুন ডাটা রিটার্ন করবে
+      new: true,
     });
 
     res.status(200).json({

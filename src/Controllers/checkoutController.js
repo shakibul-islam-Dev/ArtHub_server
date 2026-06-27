@@ -1,13 +1,22 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { ObjectId } = require("mongodb");
-const { getCollection } = require("../config/database"); // 👈 আপনার প্রোভাইড করা গ্লোবাল কালেকশন মেথড
+const { getCollection } = require("../config/database");
 
 // =========================================================================
 // ১. স্ট্রাইপ ওয়ান-টাইম পেমেন্ট সেশন তৈরি (Checkout Session)
 // =========================================================================
 const createSingleArtworkCheckout = async (req, res) => {
   try {
-    const { artworkId, title, price, imageUrl, userId, userEmail } = req.body;
+    const {
+      artworkId,
+      title,
+      price,
+      imageUrl,
+      userId,
+      userEmail,
+      userName,
+      artistEmail,
+    } = req.body;
 
     if (!price || price <= 0) {
       return res
@@ -41,8 +50,11 @@ const createSingleArtworkCheckout = async (req, res) => {
       cancel_url: `${baseUrl}/artwork/${artworkId}`,
       metadata: {
         artworkId,
+        title: title || "Untitled Art", // ফ্রন্টএন্ডের জন্য মেটাডেটা ব্যাকআপ
         userId,
         userEmail,
+        buyerName: userName || "Guest User", // ক্রেতার নাম ব্যাকআপ
+        artistEmail: artistEmail || "Unknown Artist", // আর্টিস্টের ইমেইল ব্যাকআপ
         paymentType: "single_artwork",
       },
     });
@@ -75,13 +87,13 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
         .json({ success: false, message: "Payment not completed yet" });
     }
 
-    const { artworkId, userId, userEmail } = session.metadata;
+    // মেটাডেটা থেকে সব প্রয়োজনীয় প্রোপার্টি ডিস্ট্রাকচার করা
+    const { artworkId, title, userId, userEmail, buyerName, artistEmail } =
+      session.metadata;
     const amount = session.amount_total / 100;
 
-    // 🚀 আপনার getCollection ব্যবহার করে সরাসরি কালেকশন কল করা হলো (db.collection লাগবে না আর)
     const transactionsCollection = await getCollection("transactions");
 
-    // ObjectId ভ্যালিডেশন এবং ফরম্যাটিং
     const formattedArtworkId = ObjectId.isValid(artworkId)
       ? new ObjectId(artworkId)
       : artworkId;
@@ -89,34 +101,52 @@ const confirmPaymentAndSaveOrder = async (req, res) => {
       ? new ObjectId(userId)
       : userId;
 
-    // ডুপ্লিকেট চেক
+    // ডুপ্লিকেট চেক (যাতে রিফ্রেশ দিলে একই ট্রানজেকশন ডাবল সেভ না হয়)
     const existingTransaction = await transactionsCollection.findOne({
       artworkId: formattedArtworkId,
       userId: formattedUserId,
     });
 
     if (existingTransaction) {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Transaction already recorded.",
-          transaction: existingTransaction,
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Transaction already recorded.",
+        transaction: existingTransaction,
+      });
     }
 
-    // নতুন ট্রানজেকশন অবজেক্ট
+    // নতুন অবজেক্ট ফরম্যাট (আগের কি-গুলো অপরিবর্তিত রেখে অতিরিক্ত ফ্রন্টএন্ড ডাটা সহ)
     const newTransaction = {
       amount: amount,
       userId: formattedUserId,
       userEmail: userEmail ? userEmail.trim().toLowerCase() : null,
       artworkId: formattedArtworkId,
+
+      // ফ্রন্টএন্ড ট্রানজেকশন পেজ যে ফিল্ডগুলো ম্যাপ করছে:
+      artwork_title: title || "Untitled Art",
+      buyer_name: buyerName || "Guest User",
+      buyer_email: userEmail ? userEmail.trim().toLowerCase() : "No Email",
+      artist_email: artistEmail || "Unknown Artist",
+
       createdAt: new Date(),
     };
 
-    // ডাটাবেজে ইনসার্ট
     const result = await transactionsCollection.insertOne(newTransaction);
     newTransaction._id = result.insertedId;
+
+    // পেমেন্ট সফল হওয়ার সাথে সাথে আর্টওয়ার্কের স্ট্যাটাস "sold" করার সেফটি কুয়েরি
+    try {
+      const artworkCollection = await getCollection("artwork");
+      const artQuery = { $or: [{ _id: artworkId }] };
+      if (ObjectId.isValid(artworkId)) {
+        artQuery.$or.push({ _id: new ObjectId(artworkId) });
+      }
+      await artworkCollection.updateOne(artQuery, {
+        $set: { isSold: true, status: "sold", updatedAt: new Date() },
+      });
+    } catch (artErr) {
+      console.error("Failed to update artwork status to sold:", artErr);
+    }
 
     res.status(200).json({
       success: true,
@@ -138,7 +168,6 @@ const getUserTransactionHistory = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // 🚀 সরাসরি transactions কালেকশন অবজেক্ট তুলে আনা হলো
     const transactionsCollection = await getCollection("transactions");
 
     const formattedUserId = ObjectId.isValid(userId)
@@ -153,7 +182,7 @@ const getUserTransactionHistory = async (req, res) => {
         },
         {
           $lookup: {
-            from: "artworks", // আপনার আসল ডাটাবেজে এই কালেকশনটির নাম ছোট হাতের নাকি বড় হাতের তা নিশ্চিত করুন (যেমন: artworks)
+            from: "artwork",
             localField: "artworkId",
             foreignField: "_id",
             as: "artworkId",

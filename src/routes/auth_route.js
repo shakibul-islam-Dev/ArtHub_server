@@ -1,6 +1,6 @@
 const express = require("express");
 const authRouter = express.Router();
-const User = require("../models/user"); // 👈 আপনার Mongoose Model
+const User = require("../models/user");
 
 // ======================== LOGIN ========================
 authRouter.post("/login", async (req, res) => {

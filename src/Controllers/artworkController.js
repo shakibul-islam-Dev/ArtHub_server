@@ -5,15 +5,34 @@ class ArtworkController {
   // ======================== GET ALL ARTWORKS ========================
   async getAll(req, res) {
     try {
-      const { artist_id } = req.query;
+      const { artist_id, isAdminPage } = req.query;
+
+      // এখানে req.body ডিফাইনড না থাকলেও অপশনাল চেইনিং (?.) এর কারণে কোড ক্র্যাশ করবে না
+      const rawArtistId =
+        artist_id ||
+        req.body?.user?.id ||
+        req.body?.user?._id ||
+        req.user?.id ||
+        req.user?._id;
 
       let query = {};
-      if (artist_id) {
-        if (ObjectId.isValid(artist_id.trim())) {
-          query.artist_id = new ObjectId(artist_id.trim());
+
+      // ১. যদি অ্যাডমিন পেজ থেকে রিকোয়েস্ট আসে, তবে সব আর্টওয়ার্ক দেখাবে (পেন্ডিং + অ্যাপ্রুভড)
+      if (isAdminPage === "true") {
+        query = {};
+      }
+      // ২. যদি আর্টিস্টের নিজের পেজের জন্য রিকোয়েস্ট আসে
+      else if (rawArtistId) {
+        const cleanArtistId = rawArtistId.toString().trim();
+        if (ObjectId.isValid(cleanArtistId)) {
+          query.artist_id = new ObjectId(cleanArtistId);
         } else {
-          query.artist_id = artist_id.trim();
+          query.artist_id = cleanArtistId;
         }
+      }
+      // ৩. পাবলিক ব্রাউজ পেজের জন্য শুধুমাত্র অ্যাপ্রুভড গুলো দেখাবে
+      else {
+        query.status = "approved";
       }
 
       const artworkCollection = await getCollection("artwork");
@@ -34,11 +53,6 @@ class ArtworkController {
   async getById(req, res) {
     try {
       const { id } = req.params;
-      if (!id)
-        return res
-          .status(400)
-          .json({ success: false, message: "Artwork ID is required" });
-
       const cleanId = id.trim();
       const artworkCollection = await getCollection("artwork");
 
@@ -82,7 +96,6 @@ class ArtworkController {
         user,
       } = req.body;
 
-      // ফিল্ড ভ্যালিডেশন
       if (!title || !description || !price || !category || !image_url) {
         return res.status(400).json({
           success: false,
@@ -90,8 +103,8 @@ class ArtworkController {
         });
       }
 
-      // আর্টিস্ট আইডি ডিটেকশন ফিক্স
-      const rawArtistId = artist_id || user?.id || user?._id || req.user?.id;
+      const rawArtistId =
+        artist_id || user?.id || user?._id || req.user?.id || req.user?._id;
       if (!rawArtistId) {
         return res.status(401).json({
           success: false,
@@ -104,7 +117,6 @@ class ArtworkController {
         finalArtistId = new ObjectId(finalArtistId);
       }
 
-      // আর্টিস্টের নাম ও প্রোফাইল ইমেজ ব্যাকআপ হ্যান্ডলিং
       const finalArtistName =
         artist_name || user?.name || req.user?.name || "Unknown Artist";
       const finalArtistProfile =
@@ -122,6 +134,8 @@ class ArtworkController {
         artist_name: finalArtistName,
         artist_profile_url: finalArtistProfile,
         isSold: req.body.isSold === true ? true : false,
+        status: "pending",
+        isApproved: false,
         date_uploaded: date_uploaded ? new Date(date_uploaded) : new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -132,7 +146,8 @@ class ArtworkController {
 
       return res.status(201).json({
         success: true,
-        message: "Successfully Saved to Database!",
+        message:
+          "Successfully Saved to Database and waiting for admin approval!",
         ...newArtwork,
       });
     } catch (error) {
@@ -145,15 +160,51 @@ class ArtworkController {
     }
   }
 
+  // ======================== ADMIN APPROVE ARTWORK ========================
+  async approveArtwork(req, res) {
+    try {
+      const { id } = req.params;
+      const cleanId = id.trim();
+      const artworkCollection = await getCollection("artwork");
+
+      const query = { $or: [{ _id: cleanId }] };
+      if (ObjectId.isValid(cleanId)) {
+        query.$or.push({ _id: new ObjectId(cleanId) });
+      }
+
+      const result = await artworkCollection.updateOne(query, {
+        $set: {
+          status: "approved",
+          isApproved: true,
+          updatedAt: new Date(),
+        },
+      });
+
+      if (result.matchedCount === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Artwork not found" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Artwork approved successfully! It is now visible on the browse page.",
+      });
+    } catch (error) {
+      console.error("APPROVE Artwork Error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+
   // ======================== UPDATE ARTWORK ========================
   async update(req, res) {
     try {
       const { id } = req.params;
-      if (!id)
-        return res
-          .status(400)
-          .json({ success: false, message: "Artwork ID is required" });
-
       const cleanId = id.trim();
       const {
         title,
@@ -166,6 +217,8 @@ class ArtworkController {
         artist_profile_url,
         date_uploaded,
         isSold,
+        status,
+        isApproved,
         user,
       } = req.body;
 
@@ -195,6 +248,7 @@ class ArtworkController {
         user?.id ||
         user?._id ||
         req.user?.id ||
+        req.user?._id ||
         existingArtwork.artist_id;
       let finalArtistId = rawArtistId.toString().trim();
       if (ObjectId.isValid(finalArtistId)) {
@@ -219,6 +273,11 @@ class ArtworkController {
           req.user?.image ||
           existingArtwork.artist_profile_url,
         isSold: typeof isSold === "boolean" ? isSold : existingArtwork.isSold,
+        status: status || existingArtwork.status,
+        isApproved:
+          typeof isApproved === "boolean"
+            ? isApproved
+            : existingArtwork.isApproved,
         date_uploaded: date_uploaded
           ? new Date(date_uploaded)
           : existingArtwork.date_uploaded,
@@ -258,11 +317,6 @@ class ArtworkController {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      if (!id)
-        return res
-          .status(400)
-          .json({ success: false, message: "Artwork ID is required" });
-
       const cleanId = id.trim();
       const artworkCollection = await getCollection("artwork");
 

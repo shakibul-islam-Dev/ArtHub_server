@@ -34,7 +34,7 @@ class PaymentController {
     };
 
     const updatedPayment = await Payment.findByIdAndUpdate(id, updateData, {
-      new: true, // এর ফলে আপডেট হওয়া নতুন ডাটা রিটার্ন করবে
+      new: true,
     });
 
     return updatedPayment;

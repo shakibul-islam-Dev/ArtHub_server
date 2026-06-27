@@ -1,19 +1,27 @@
 const express = require("express");
 const userRouter = express.Router();
-const UserController = require("../controllers/UserController");
 
-// ==================== ১. স্ট্যাটিক বা স্পেসিফিক রাউটস ====================
-// (ভবিষ্যতে কোনো স্পেসিফিক রুট যেমন /search বা /current লাগলে সেগুলো এখানে লিখবে)
-// userRouter.get("/current", UserController.getCurrentUserByRole);
+// ফাইলপাথ এবং ক্যাপিটালাইজেশন ঠিক রাখা হয়েছে (কন্ট্রোলার ফাইলের নামের সাথে মিল রেখে)
+const userController = require("../controllers/userController");
 
-// ==================== ২. বেজ রাউটস (আইডি ছাড়া) ====================
-userRouter.get("/", UserController.getAll);
-userRouter.post("/", UserController.create);
+// ======================== ROUTES ========================
 
-// ==================== ৩. ডাইনামিক রাউটস (আইডি সহ - সবসময় নিচে) ====================
-// 👑 আইডি দিয়ে খোঁজার রুট
-userRouter.get("/:id", UserController.getById);
-userRouter.put("/:id", UserController.update);
-userRouter.delete("/:id", UserController.delete);
+// ১. সব ইউজারদের ডাটা নিয়ে আসা
+userRouter.get("/", userController.getAll);
+
+// ২. রোল অনুযায়ী নির্দিষ্ট সিঙ্গেল ইউজার খোঁজা
+userRouter.get("/role", userController.getCurrentUserByRole);
+
+// ৩. নতুন ইউজার তৈরি বা সাইনআপ হ্যান্ডেল করা
+userRouter.post("/", userController.create);
+
+// ৪. নির্দিষ্ট আইডি ধরে সিঙ্গেল ইউজার খোঁজা
+userRouter.get("/:id", userController.getById);
+
+// ৫. ইউজারের তথ্য বা রোল পরিবর্তন/আপডেট করা
+userRouter.put("/:id", userController.update);
+
+// ৬. অ্যাডমিন প্যানেল থেকে ইউজার, আর্টিস্ট বা যে কাউকে ডিলিট করা
+userRouter.delete("/:id", userController.delete);
 
 module.exports = userRouter;

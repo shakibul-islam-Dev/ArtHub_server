@@ -33,7 +33,6 @@ commentRouter.post("/", async (req, res) => {
   try {
     const { comment, artwork_id, user } = req.body;
 
-    // Authentication & Authorization Validation
     if (!user) {
       return res.status(401).json({
         message: "Unauthorized access! No user information found.",
@@ -50,7 +49,6 @@ commentRouter.post("/", async (req, res) => {
       return res.status(400).json({ message: "Please provide a comment" });
     }
 
-    // Amader schema validation dynamic controller naming matching mapping
     const savedComment = await commentController.create({
       comment: comment,
       artworkId: artwork_id,

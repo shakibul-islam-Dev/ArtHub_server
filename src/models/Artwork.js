@@ -31,7 +31,6 @@ class Artwork {
       price: parseFloat(data.price),
       category: String(data.category).trim(),
 
-      // ফ্রন্টএন্ড থেকে পাঠানো বাকি অপশনাল ডাটা এবং মেটাডেটা
       artist_name: data.artist_name
         ? String(data.artist_name).trim()
         : "Unknown Artist",

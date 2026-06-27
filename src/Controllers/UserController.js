@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const { getCollection } = require("../config/database");
 
 class UserController {
-  // 🎯 ১. সরাসরি রোলের ওপর ভিত্তি করে "১টি পিওর অবজেক্ট" পাঠানো (কোনো অ্যারে বা রেপার ছাড়া)
+  // ======================== GET CURRENT USER BY ROLE ========================
   getCurrentUserByRole = async (req, res) => {
     try {
       const userRole = req.query.role || req.headers["x-user-role"] || "artist";
@@ -10,7 +10,6 @@ class UserController {
 
       const userCollection = await getCollection("user");
 
-      // findOne সবসময় সরাসরি ১টি পিওর অবজেক্ট দেয়
       const user = await userCollection.findOne({
         role: { $regex: `^${safeRole}$`, $options: "i" },
       });
@@ -22,7 +21,6 @@ class UserController {
         });
       }
 
-      // 🎯 সরাসরি অবজেক্ট রিটার্ন (পোস্টম্যানে { _id: "...", name: "..." } এভাবে আসবে)
       return res.status(200).json(user);
     } catch (error) {
       return res.status(500).json({
@@ -33,7 +31,7 @@ class UserController {
     }
   };
 
-  // 📊 ২. সব ইউজার গেট করা
+  // ======================== GET ALL USERS & ARTISTS ========================
   getAll = async (req, res) => {
     try {
       const userCollection = await getCollection("user");
@@ -61,14 +59,15 @@ class UserController {
     }
   };
 
-  // 🔍 ৩. আইডি দিয়ে নির্দিষ্ট ইউজার খোঁজা (পিওর অবজেক্ট রিটার্ন)
+  // ======================== GET BY ID ========================
   getById = async (req, res) => {
     try {
       const { id } = req.params;
-      if (!id)
+      if (!id) {
         return res
           .status(400)
           .json({ success: false, message: "User ID is required" });
+      }
 
       const cleanId = id.trim();
       const userCollection = await getCollection("user");
@@ -86,7 +85,6 @@ class UserController {
           .json({ success: false, message: "User not found" });
       }
 
-      // 🎯 সরাসরি অবজেক্ট রিটার্ন
       return res.status(200).json(user);
     } catch (error) {
       return res.status(500).json({
@@ -97,7 +95,7 @@ class UserController {
     }
   };
 
-  // ➕ ৪. নতুন ইউজার তৈরি করা
+  // ======================== CREATE USER ========================
   create = async (req, res) => {
     try {
       const user = req.body;
@@ -124,8 +122,6 @@ class UserController {
       };
 
       await userCollection.insertOne(newUser);
-
-      // 🎯 তৈরি হওয়া নতুন ইউজার অবজেক্ট সরাসরি রিটার্ন
       return res.status(201).json(newUser);
     } catch (error) {
       return res.status(500).json({
@@ -136,14 +132,15 @@ class UserController {
     }
   };
 
-  // 📝 ৫. প্রোফাইল আপডেট (ড্রাইভার ভার্সন সেফ পিওর অবজেক্ট রিটার্ন)
+  // ======================== UPDATE USER / ROLE CHANGE ========================
   update = async (req, res) => {
     try {
       const { id } = req.params;
-      if (!id)
+      if (!id) {
         return res
           .status(400)
           .json({ success: false, message: "User ID is required" });
+      }
 
       const cleanId = id.trim();
       const incomingData = req.body;
@@ -182,23 +179,21 @@ class UserController {
         { returnDocument: "after" },
       );
 
-      if (!result) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
-      // মঙ্গোডিবি ড্রাইভারে যদি .value থাকে তবে সেটা নেবে, না থাকলে সরাসরি ডক নেবে
-      const updatedUser = result.value !== undefined ? result.value : result;
+      // 🔥 মঙ্গোডিবি ভার্সন কমপ্যাটিবিলিটি ফিক্স
+      const updatedUser =
+        result && result.value !== undefined ? result.value : result;
 
       if (!updatedUser) {
         return res
           .status(404)
-          .json({ success: false, message: "User not found" });
+          .json({ success: false, message: "User not found for update" });
       }
 
-      // 🎯 আপডেটেড আপ টু ডেট পিওর অবজেক্ট রিটার্ন
-      return res.status(200).json(updatedUser);
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        data: updatedUser,
+      });
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -208,14 +203,15 @@ class UserController {
     }
   };
 
-  // ❌ ⁶. ইউজার ডিলিট
+  // ======================== DELETE USER / ARTIST ========================
   delete = async (req, res) => {
     try {
       const { id } = req.params;
-      if (!id)
+      if (!id) {
         return res
           .status(400)
           .json({ success: false, message: "User ID is required" });
+      }
 
       const cleanId = id.trim();
       const userCollection = await getCollection("user");
@@ -225,24 +221,28 @@ class UserController {
         query.$or.push({ _id: new ObjectId(cleanId) });
       }
 
-      const result = await userCollection.findOneAndDelete(query);
-
-      if (!result) {
+      // ডিলিট করার আগে ইউজারটি আদৌ ডাটাবেজে আছে কিনা চেক করা নিরাপদ
+      const existingUser = await userCollection.findOne(query);
+      if (!existingUser) {
         return res
           .status(404)
           .json({ success: false, message: "User not found" });
       }
 
-      const deletedUser = result.value !== undefined ? result.value : result;
+      // সরাসরি ডিলিট রিকোয়েস্ট পাঠানো
+      const deleteResult = await userCollection.deleteOne(query);
 
-      if (!deletedUser) {
+      if (deleteResult.deletedCount === 0) {
         return res
           .status(404)
-          .json({ success: false, message: "User not found" });
+          .json({ success: false, message: "Failed to delete user" });
       }
 
-      // 🎯 ডিলিট হওয়া অবজেক্টটি সরাসরি রিটার্ন করে দেওয়া হলো
-      return res.status(200).json(deletedUser);
+      return res.status(200).json({
+        success: true,
+        message: "User/Artist deleted successfully from database",
+        deletedUser: existingUser,
+      });
     } catch (error) {
       return res.status(500).json({
         success: false,

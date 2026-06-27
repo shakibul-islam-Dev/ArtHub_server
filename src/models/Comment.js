@@ -12,7 +12,6 @@ class Comment {
       throw new Error("Comment text is required.");
     }
 
-    // Mongoose schema-r moto trim, dynamic ID handling ebong automatic timestamps handle kora holo
     return {
       artworkId:
         typeof data.artworkId === "object"
@@ -28,9 +27,7 @@ class Comment {
     };
   }
 
-  // Jodi kono development validation bypass ba customized extra logic dorkar hoy
   static isValidComment(text) {
-    // Basic text length validation bypass test
     return text && text.trim().length > 0;
   }
 }

@@ -2,18 +2,14 @@ const { getCollection } = require("../config/database");
 const Subscription = require("../models/Subscription");
 
 const subscriptionController = {
-  // ১. সাবস্ক্রিপশন তৈরি বা আপডেট করা (Upsert)
   upsertSubscription: async (req, res) => {
     try {
       const rawData = req.body;
 
-      // মডেল ভ্যালিডেশন এবং ফরম্যাটিং
       const formattedData = Subscription.format(rawData);
 
-      // ⚠️ ফিক্সড: এখানে অবশ্যই await দিতে হবে
       const subscriptionCollection = await getCollection("subscriptions");
 
-      // যদি এই ইউজারের সাবস্ক্রিপশন আগে থেকেই থাকে তবে আপডেট হবে, না থাকলে নতুন তৈরি হবে (Upsert)
       await subscriptionCollection.updateOne(
         { userEmail: formattedData.userEmail },
         {
@@ -38,7 +34,6 @@ const subscriptionController = {
     }
   },
 
-  // ২. নির্দিষ্ট ইউজারের সাবস্ক্রিপশন খুঁজে বের করা (Get by User Email)
   getSubscriptionByUser: async (req, res) => {
     try {
       const { email } = req.params;
@@ -49,7 +44,6 @@ const subscriptionController = {
           .json({ success: false, message: "Email is required." });
       }
 
-      // ⚠️ ফিক্সড: এখানে অবশ্যই await দিতে হবে
       const subscriptionCollection = await getCollection("subscriptions");
 
       const subscription = await subscriptionCollection.findOne({

@@ -12,7 +12,6 @@ class Transaction {
     if (!data.userId) throw new Error("User ID (userId) is required.");
     if (!data.artworkId) throw new Error("Artwork ID (artworkId) is required.");
 
-    // ২. MongoDB ObjectId হ্যান্ডলিং (userId এর জন্য)
     let formattedUserId = null;
     if (data.userId) {
       const cleanUserId = data.userId.toString().trim();
