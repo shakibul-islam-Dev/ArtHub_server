@@ -18,15 +18,14 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.BETTER_AUTH_URL,
+    origin: process.env.CLIENT_URL,
     credentials: true,
   }),
 );
 
-
 app.use(async (req, res, next) => {
   try {
-    await connectDB(); /
+    await connectDB();
     next();
   } catch (err) {
     console.error("Database connection failed during request:", err);
@@ -49,13 +48,11 @@ app.get("/", (req, res) => {
   res.send("Server is running perfectly!");
 });
 
-
 if (process.env.NODE_ENV !== "production") {
   const port = process.env.PORT || 5000;
   app.listen(port, () => {
     console.log(`Server is perfectly running on port ${port}`);
   });
 }
-
 
 module.exports = app;
