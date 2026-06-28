@@ -28,7 +28,6 @@ const connectDB = async () => {
   } catch (error) {
     console.error("Database connection error:", error);
     connectionPromise = null;
-    process.exit(1);
   }
 };
 
