@@ -1,6 +1,5 @@
 const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 
-// Better-Auth এর JWKS এন্ডপয়েন্ট সেটআপ
 const JWKS = createRemoteJWKSet(
   new URL(`${process.env.BETTER_AUTH_URL}/api/auth/jwks`),
 );
