@@ -19,7 +19,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: process.env.BETTER_AUTH_URL,
     credentials: true,
   }),
 );
