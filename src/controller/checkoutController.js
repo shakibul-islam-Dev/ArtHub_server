@@ -23,10 +23,6 @@ const createSingleArtworkCheckout = async (req, res) => {
 
     let baseUrl = process.env.NEXT_PUBLIC_URL;
 
-    if (baseUrl.includes(":5000")) {
-      baseUrl = baseUrl.replace(":5000", ":3000");
-    }
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
