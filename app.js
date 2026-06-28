@@ -11,11 +11,10 @@ const subscription_route = require("./src/routes/subscription_route");
 const checkoutRouter = require("./src/routes/checkoutRoutes");
 const salesRoutes = require("./src/routes/sales_route");
 const transctionsRoute = require("./src/routes/transctions_route");
-const { create } = require("./src/controller/commentController");
-const app = express();
-const port = process.env.PORT || 5000;
 
-// ======================== মিডলওয়্যার ========================
+const app = express();
+
+// ======================== ১. গ্লোবাল মিডলওয়্যার ========================
 app.use(express.json());
 app.use(
   cors({
@@ -24,7 +23,20 @@ app.use(
   }),
 );
 
-// ======================== API Routes ========================
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB(); /
+    next();
+  } catch (err) {
+    console.error("Database connection failed during request:", err);
+    res
+      .status(500)
+      .json({ error: "Internal Server Error: Database connection failed" });
+  }
+});
+
+// ======================== ২. API Routes ========================
 app.use("/api/arthub/artwork", artworkRouter);
 app.use("/api/arthub/user", userRouter);
 app.use("/api/arthub/comment", commentRouter);
@@ -34,17 +46,16 @@ app.use("/api/arthub", salesRoutes);
 app.use("/api/arthub/transactions", transctionsRoute);
 
 app.get("/", (req, res) => {
-  res.send("Server is running!");
+  res.send("Server is running perfectly!");
 });
 
-// ======================== Native MongoDB Connection ========================
-connectDB()
-  .then(() => {
-    app.listen(port, () => {
-      console.log(` Server is perfectly running on port ${port}`);
-    });
-  })
-  .catch((err) => {
-    console.error(" Critical: Could not start server due to DB error!", err);
+
+if (process.env.NODE_ENV !== "production") {
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server is perfectly running on port ${port}`);
   });
+}
+
+
 module.exports = app;
