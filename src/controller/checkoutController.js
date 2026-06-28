@@ -21,7 +21,7 @@ const createSingleArtworkCheckout = async (req, res) => {
         .json({ success: false, message: "Invalid artwork price" });
     }
 
-    let baseUrl = process.env.NEXT_PUBLIC_URL;
+    let baseUrl = process.env.CLIENT_URL;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
