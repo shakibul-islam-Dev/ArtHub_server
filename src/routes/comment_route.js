@@ -7,6 +7,7 @@ const {
   update,
   deleteComment,
 } = require("../controller/commentController");
+const verifyToken = require("../middlewares/verifytoken");
 
 // ======================== GET ALL COMMENTS ========================
 commentRouter.get("/", async (req, res) => {
@@ -35,6 +36,7 @@ commentRouter.get("/:id", async (req, res) => {
 });
 
 // ======================== POST NEW COMMENT ========================
+// POST NEW COMMENT
 commentRouter.post("/", async (req, res) => {
   try {
     const { comment, artwork_id, user } = req.body;
@@ -45,9 +47,10 @@ commentRouter.post("/", async (req, res) => {
       });
     }
 
-    if (user.role !== "artist") {
+    // Role check for both "artist" and "user"
+    if (user.role !== "artist" && user.role !== "user") {
       return res.status(403).json({
-        message: "Forbidden access! Only artists can post comments.",
+        message: "Forbidden access! Only users and artists can post comments.",
       });
     }
 
@@ -71,7 +74,7 @@ commentRouter.post("/", async (req, res) => {
   }
 });
 
-// ======================== UPDATE COMMENT ========================
+// UPDATE COMMENT - Update this route similarly
 commentRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -83,9 +86,10 @@ commentRouter.put("/:id", async (req, res) => {
       });
     }
 
-    if (user.role !== "artist") {
+    // Role check for both "artist" and "user"
+    if (user.role !== "artist" && user.role !== "user") {
       return res.status(403).json({
-        message: "Forbidden access! Only artists can post comments.",
+        message: "Forbidden access! Only users and artists can post comments.",
       });
     }
 

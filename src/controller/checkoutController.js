@@ -21,7 +21,7 @@ const createSingleArtworkCheckout = async (req, res) => {
         .json({ success: false, message: "Invalid artwork price" });
     }
 
-    let baseUrl = process.env.NEXT_PUBLIC_URL || "http://localhost:5000";
+    let baseUrl = process.env.NEXT_PUBLIC_URL;
 
     if (baseUrl.includes(":5000")) {
       baseUrl = baseUrl.replace(":5000", ":3000");

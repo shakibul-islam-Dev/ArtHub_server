@@ -5,10 +5,19 @@ const {
   confirmPaymentAndSaveOrder,
   getUserTransactionHistory,
 } = require("../controller/checkoutController");
+const verifyToken = require("../middlewares/verifytoken");
 
-router.post("/checkout/single-artwork", createSingleArtworkCheckout);
+router.post(
+  "/checkout/single-artwork",
 
-router.post("/checkout/confirm-payment", confirmPaymentAndSaveOrder);
+  createSingleArtworkCheckout,
+);
+
+router.post(
+  "/checkout/confirm-payment",
+
+  confirmPaymentAndSaveOrder,
+);
 
 router.get("/checkout/history/:userId", getUserTransactionHistory);
 

@@ -57,5 +57,5 @@ module.exports = {
   getById,
   create,
   update,
-  delete: deletePayment,
+  deletePayment,
 };

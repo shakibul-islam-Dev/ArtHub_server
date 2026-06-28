@@ -11,6 +11,7 @@ const subscription_route = require("./src/routes/subscription_route");
 const checkoutRouter = require("./src/routes/checkoutRoutes");
 const salesRoutes = require("./src/routes/sales_route");
 const transctionsRoute = require("./src/routes/transctions_route");
+const { create } = require("./src/controller/commentController");
 const app = express();
 const port = process.env.PORT || 5000;
 

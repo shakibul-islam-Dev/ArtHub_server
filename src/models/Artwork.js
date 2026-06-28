@@ -2,7 +2,6 @@ const { ObjectId } = require("mongodb");
 
 class Artwork {
   static format(data) {
-    // ১. ফ্রন্টএন্ড থেকে আসা ৫টি ম্যান্ডেটরি ফিল্ডের কড়া ভ্যালিডেশন
     if (!data.title) throw new Error("Title is required.");
     if (!data.image_url) throw new Error("Image URL is required.");
     if (!data.description) throw new Error("Description is required.");
@@ -22,7 +21,6 @@ class Artwork {
         : cleanId;
     }
 
-    // ৩. ফাইনাল অবজেক্ট তৈরি এবং রিটার্ন
     return {
       artist_id: formattedArtistId,
       title: String(data.title).trim(),

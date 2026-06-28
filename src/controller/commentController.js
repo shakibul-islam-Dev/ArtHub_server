@@ -9,7 +9,6 @@ const getAll = async () => {
   return comments;
 };
 
-// ======================== GET SINGLE COMMENT BY ID ========================
 const getById = async (id) => {
   if (!ObjectId.isValid(id)) throw new Error("Invalid Object ID format.");
 
@@ -84,11 +83,10 @@ const deleteComment = async (id) => {
   return { message: "Comment deleted successfully" };
 };
 
-// সবগুলো মেথড অবজেক্ট প্রপার্টি হিসেবে এক্সপোর্ট করা হলো
 module.exports = {
   getAll,
   getById,
   create,
   update,
-  delete: deleteComment, // 'delete' কিওয়ার্ডের সাথে 'deleteComment' ফাংশন ম্যাপ করা হলো
+  deleteComment,
 };

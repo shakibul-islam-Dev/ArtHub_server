@@ -19,8 +19,12 @@ const getAll = async (req, res) => {
       query = {};
     } else if (rawArtistId) {
       const cleanArtistId = rawArtistId.toString().trim();
+
       if (ObjectId.isValid(cleanArtistId)) {
-        query.artist_id = new ObjectId(cleanArtistId);
+        query.$or = [
+          { artist_id: new ObjectId(cleanArtistId) },
+          { artist_id: cleanArtistId },
+        ];
       } else {
         query.artist_id = cleanArtistId;
       }
@@ -282,7 +286,7 @@ const update = async (req, res) => {
       { returnDocument: "after" },
     );
 
-    const updatedArtwork = result && result.value ? result.value : result;
+    const updatedArtwork = result?.value || result;
 
     if (!updatedArtwork) {
       return res
