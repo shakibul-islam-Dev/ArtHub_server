@@ -47,3 +47,4 @@ connectDB()
   .catch((err) => {
     console.error(" Critical: Could not start server due to DB error!", err);
   });
+module.exports = app;
